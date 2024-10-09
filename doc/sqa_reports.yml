@@ -1,6 +1,27 @@
 Applications:
     bubble_flow:
         app_types:
-            - BubbleFlowApp
+            - Bubble Flow
         content_directory: ${ROOT_DIR}/doc/content
+        remove:
+            - ${MOOSE_DIR}/framework/doc/remove.yml
         log_default: WARNING
+        show_warning: false
+
+Documents:
+    software_requirements_specification: sqa/bubble_flow_srs.md
+    software_design_description: sqa/bubble_flow_sdd.md
+    software_test_plan: sqa/bubble_flow_stp.md
+    requirements_traceability_matrix: sqa/bubble_flow_rtm.md
+    verification_validation_report: sqa/bubble_flow_vvr.md
+    failure_analysis_report: sqa/bubble_flow_far.md
+    software_library_list: sqa/bubble_flow_sll.md
+    log_default: WARNING
+    show_warning: false
+
+Requirements:
+    bubble_flow:
+        directories:
+            - ${ROOT_DIR}/test
+        log_default: WARNING
+        show_warning: false

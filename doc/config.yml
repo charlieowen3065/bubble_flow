@@ -18,3 +18,11 @@ Extensions:
         remove: !include ${MOOSE_DIR}/framework/doc/remove.yml
         includes:
             - include
+    MooseDocs.extensions.sqa:
+        active: true
+        categories:
+            bubble_flow: !include ${ROOT_DIR}/doc/sqa_bubble_flow.yml
+            framework: !include ${MOOSE_DIR}/framework/doc/sqa_framework.yml
+        reports: !include ${ROOT_DIR}/doc/sqa_reports.yml
+    MooseDocs.extensions.template:
+        active: true

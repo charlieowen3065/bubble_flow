@@ -1,0 +1,9 @@
+directories:
+    - ${ROOT_DIR}/test/tests
+specs:
+    - tests
+dependencies:
+    - framework
+repos:
+    default: https://github.com/charlieowen3065/bubble_flow.git (push)
+reports: !include ${ROOT_DIR}/doc/sqa_reports.yml
