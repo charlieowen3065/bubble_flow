@@ -327,3 +327,6 @@ share/
 /tutorials/tutorial01_app_development/*/babbler.yaml
 /tutorials/darcy_thermo_mech/*/darcy_thermo_mech.yaml
 bubble_flow.yaml
+
+# CHARLIE OWEN
+/results
