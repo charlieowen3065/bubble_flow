@@ -1,4 +1,4 @@
-.libs
+.ibs
 *.la
 *.lo
 *.d
@@ -330,3 +330,5 @@ bubble_flow.yaml
 
 # CHARLIE OWEN
 /results
+/charlieowen
+
