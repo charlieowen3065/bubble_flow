@@ -22,6 +22,9 @@ protected:
     void setupTimeVariables();
     std::string getFilename(std::string BASE);
     void outputToCSV(Real** arr_2d, std::vector<std::string> column_names, int num_rows, int num_cols, std::string base_name);
+    std::vector<Real> getNodeCoordinates(const Point & p, const Real & id);
+    dof_id_type** getDOFIndices_SingleVariable(std::vector<dof_id_type> & di, const unsigned int sys_number,
+                                               const unsigned int var_number, unsigned int number_componets);
 
     // -------- Class Variables -------- //
     /// Class Initilization

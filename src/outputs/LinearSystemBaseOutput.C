@@ -145,3 +145,35 @@ LinearSystemBaseOutput::outputToCSV(Real** arr_2d, std::vector<std::string> colu
 	// Close file
 	csv_file.close();	
 }
+
+std::vector<Real>
+LinearSystemBaseOutput::getNodeCoordinates(const Point & p, const Real & id)
+{
+	std::vector<Real> coords;
+	coords.push_back(p(0));  // x
+	coords.push_back(p(1));  // y
+	coords.push_back(p(2));  // z
+	coords.push_back(id);    // id
+	return coords;
+}
+
+dof_id_type**
+LinearSystemBaseOutput::getDOFIndices_SingleVariable(std::vector<dof_id_type> & di, const unsigned int sys_number,
+                                           			 const unsigned int var_number, unsigned int number_componets)
+{
+	// Declare return array
+	dof_id_type** component_array = new dof_id_type*[number_componets];
+	// Get dof indices
+	for (auto comp_number : make_range(number_componets))
+	{
+		component_array[comp_number] = new dof_id_type[_num_nodes];
+		for (auto node_idx : make_range(_num_nodes))
+		{
+			const Node * node_i = _mesh.nodePtr(node_idx);
+			dof_id_type dof_i = node_i->dof_number(sys_number, var_number, comp_number);
+			di.push_back(dof_i);
+			component_array[comp_number][node_idx] = dof_i;		
+		}
+	}
+	return component_array;
+}

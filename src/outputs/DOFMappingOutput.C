@@ -15,40 +15,34 @@ DOFMappingOutput::DOFMappingOutput(const InputParameters & parameters)
 {}
 
 void
-DOFMappingOutput::output() {}
-
-dof_id_type**
-DOFMappingOutput::getDofIndices_SingleVariable(std::vector<dof_id_type> & di, const unsigned int sys_number,
-                                           const unsigned int var_number, unsigned int number_componets)
+DOFMappingOutput::output() 
 {
-	// Declare return array
-	dof_id_type** component_array = new dof_id_type*[number_componets];
-	// Get dof indices
-	for (auto comp_number : make_range(number_componets))
-	{
-		component_array[comp_number] = new dof_id_type[_num_nodes];
-		for (auto node_idx : make_range(_num_nodes))
-		{
-			const Node * node_i = _mesh.nodePtr(node_idx);
-			dof_id_type dof_i = node_i->dof_number(sys_number, var_number, comp_number);
-			di.push_back(dof_i);
-			component_array[comp_number][node_idx] = dof_i;		
-		}
-	}
-	return component_array;
+    std::vector<VariableName> var_names;
+    if ((_output_variable_name != "all") && (_output_variable_name != "none"))
+    {
+        var_names.push_back(_output_variable_name);
+    } else if (_output_variable_name == "all")
+    {
+        for (auto v : _nl.getVariableNames())
+            var_names.push_back(v);
+    }
+
+    for (auto var_name : var_names){
+        outputSingleDOFMap(var_name);
+    }
 }
 
 void
 DOFMappingOutput::getSingleVariableDOFMapping(const unsigned int variable_number,
-                                          std::vector<std::string> & dof_names, 
-                                          std::vector<std::vector<dof_id_type>> & dof_mapping)
+                                              std::vector<std::string> & dof_names, 
+                                              std::vector<std::vector<dof_id_type>> & dof_mapping)
 {
 	bool is_vector;
     unsigned int number_componets = _mesh.nodePtr(0)->n_comp(_sys_number, variable_number);
     if (number_componets == 1) {is_vector = false;} else {is_vector = true;}
 
 	std::vector<dof_id_type> dof_indices_full;
-	dof_id_type** component_array = getDofIndices_SingleVariable(dof_indices_full, _sys_number, \
+	dof_id_type** component_array = getDOFIndices_SingleVariable(dof_indices_full, _sys_number,
                                                                  variable_number, number_componets);
     
     if (!is_vector)
@@ -75,7 +69,7 @@ DOFMappingOutput::getSingleVariableDOFMapping(const unsigned int variable_number
 
 Real**
 DOFMappingOutput::createDOFMapOutputArray(std::vector<std::string> & dof_names,
-                                                std::vector<std::vector<dof_id_type>> & dof_mapping)
+                                          std::vector<std::vector<dof_id_type>> & dof_mapping)
 {
     Real** OutputArray = new Real*[_num_nodes];
     int _number_componets = dof_names.size();
@@ -83,15 +77,13 @@ DOFMappingOutput::createDOFMapOutputArray(std::vector<std::string> & dof_names,
     for (dof_id_type node_idx : make_range(_num_nodes))
     {
         const Node * node_i = _mesh.nodePtr(node_idx);
-        Real xi = (*node_i)(0);
-        Real yi = (*node_i)(1);
-        Real zi = (*node_i)(2);
+        std::vector<Real> coords = getNodeCoordinates(*node_i, node_idx);
 
         OutputArray[node_idx] = new Real[4 + _number_componets];
-        OutputArray[node_idx][0] = xi;
-        OutputArray[node_idx][1] = yi;
-        OutputArray[node_idx][2] = zi;
-        OutputArray[node_idx][3] = node_idx;
+        OutputArray[node_idx][0] = coords[0];
+        OutputArray[node_idx][1] = coords[1];
+        OutputArray[node_idx][2] = coords[2];
+        OutputArray[node_idx][3] = coords[3];
         
         for (auto ci : make_range(_number_componets))
         {
@@ -123,22 +115,4 @@ DOFMappingOutput::outputSingleDOFMap(std::string variable_name)
 
     std::string base_filename = getFilename(variable_name);
     outputToCSV(dofMapArray, column_names, _num_nodes, column_names.size(), base_filename);
-}
-
-void
-DOFMappingOutput::outputAllDOFMaps()
-{
-    std::vector<VariableName> var_names;
-    if ((_output_variable_name != "all") && (_output_variable_name != "none"))
-    {
-        var_names.push_back(_output_variable_name);
-    } else if (_output_variable_name == "all")
-    {
-        for (auto v : _nl.getVariableNames())
-            var_names.push_back(v);
-    }
-
-    for (auto var_name : var_names){
-        outputSingleDOFMap(var_name);
-    }
 }
