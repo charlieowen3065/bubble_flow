@@ -158,6 +158,6 @@ protected:
 	
 	
 	// Linear Solver
-	PetscLinearSolver<Real> linear_solver;
+	libMesh::PetscLinearSolver<Real> linear_solver;
 	
 };
