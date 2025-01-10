@@ -3,11 +3,6 @@
 #include "FVOutputBase.h"
 #include "FVDOFMappingOutput.h"
 
-// Type definitions
-typedef std::map<int/*node-idx*/, std::map<std::string/*column-name*/, Real/*dof-#*/>> FVDofMap;
-typedef std::map<int/*dof-#*/, std::tuple<int/*node-idx*/, std::string/*vec-comp*/>> FVDofTupleMap;
-typedef std::map<int/*dof-#*/, std::tuple<int/*node-idx*/, std::string/*vec-comp*/, Real/*value*/>> FVVectorTupleMap;
-
 class FVSystemOutputBase : public FVOutputBase
 {
 public:
