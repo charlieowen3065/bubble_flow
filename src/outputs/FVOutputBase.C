@@ -113,7 +113,7 @@ void
 FVOutputBase::vectorMapToCSV(FVVectorTupleMap vector_map, std::string base_filename)
 {
     // Filename
-    std::string filename = getFilename(base_filename);
+    std::string filename = getFilename(base_filename) + ".csv";
 
     // Create file
 	std::ofstream csv_file;
