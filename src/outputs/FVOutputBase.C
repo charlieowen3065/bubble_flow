@@ -1,26 +1,21 @@
-#include "LinearSystemBaseOutput.h"
+#include "FVOutputBase.h"
 
-registerMooseObjectAliased("BubbleFlowApp", LinearSystemBaseOutput, "LinearSystemBaseOutput");
+registerMooseObjectAliased("BubbleFlowApp", FVOutputBase, "FVOutputBase");
 
 InputParameters
-LinearSystemBaseOutput::validParams()
+FVOutputBase::validParams()
 {
     InputParameters params = FileOutput::validParams();
 
     params.addParam<NonlinearSystemName>("nl_sys", "nl0", "The nonlinear system that we should output information for.");
 	params.addParam<std::string>("system_name", "nl0", "System to output");
-	
 	params.addParam<std::string>("variable", "all", "Name of output variable");
-
-    params.addParam<bool>("output_DOF_map", true, "Boolean to output the DOF mapping");
-
-    params.addParam<std::string>("which_time", "none", "Which times to display {none, all, converged, nonlinear, linear}");
-	params.addParam<std::string>("time_units", "s", "Display-time units {s, ms, seconds, milliseconds}");
+    params.addParam<bool>("output_DOF_map", false, "Boolean to output the DOF mapping");
 
     return params;
 }
 
-LinearSystemBaseOutput::LinearSystemBaseOutput(const InputParameters & parameters)
+FVOutputBase::FVOutputBase(const InputParameters & parameters)
   : FileOutput(parameters),
     // Nonlinear system variables
     _tid(getParam<THREAD_ID>("_tid")),
@@ -36,53 +31,22 @@ LinearSystemBaseOutput::LinearSystemBaseOutput(const InputParameters & parameter
     // Meshing
     _mesh(_problem_ptr->mesh()),
 	_num_nodes(_mesh.nNodes()),
-    // Timing Inputs
-    _which_time(getParam<std::string>("which_time")),
-	_time_units(getParam<std::string>("time_units"))
+    _num_elems(_mesh.nElem())
 {
     if (_output_variable_name != "all")
-    {
         if (!(_problem_ptr->hasVariable(_output_variable_name)))
             mooseError("ERROR: Problem does not contain the input variable | " + _output_variable_name);
-    }
-    // Compiles booleans to dispaly times
-    setupTimeVariables();
-	
 }
 
 void
-LinearSystemBaseOutput::output() {}
-
-void
-LinearSystemBaseOutput::setupTimeVariables()
-{
-    if (_which_time == "none"){
-		_show_converged_time = false;
-		_show_nl_time = false;
-		_show_l_time = false;
-	} else if (_which_time == "all"){
-		_show_converged_time = true;
-		_show_nl_time = true;
-		_show_l_time = true;
-	} else if (_which_time == "converged"){
-		_show_converged_time = true;
-		_show_nl_time = false;
-		_show_l_time = false;
-	} else if (_which_time == "nonlinear"){
-		_show_converged_time = true;
-		_show_nl_time = true;
-		_show_l_time = false;
-	} else if (_which_time == "linear"){
-		_show_converged_time = true;
-		_show_nl_time = true;
-		_show_l_time = true;
-	} 
-}
+FVOutputBase::output() 
+{}
 
 std::string
-LinearSystemBaseOutput::getFilename(std::string BASE)
+FVOutputBase::getFilename(std::string BASE)
 {
-    std::string filename = BASE + "_" + _output_variable_name;
+    // std::string filename = BASE + "_" + _output_variable_name;
+    std::string filename = BASE;
 
     int width = 4;
     std::stringstream suffix_ss;
@@ -110,10 +74,9 @@ LinearSystemBaseOutput::getFilename(std::string BASE)
 }
 
 void
-LinearSystemBaseOutput::outputToCSV(Real** arr_2d, std::vector<std::string> column_names, 
-                                    int num_rows, int num_cols, std::string base_name)
+FVOutputBase::outputToCSV(Real** arr_2d, std::vector<std::string> column_names, 
+                          int num_rows, int num_cols, std::string base_name)
 {
-	
 	std::string filename = getFilename(base_name) + ".csv";
 
 	// Create file
@@ -146,8 +109,59 @@ LinearSystemBaseOutput::outputToCSV(Real** arr_2d, std::vector<std::string> colu
 	csv_file.close();	
 }
 
+void
+FVOutputBase::vectorMapToCSV(FVVectorTupleMap vector_map, std::string base_filename)
+{
+    // Filename
+    std::string filename = getFilename(base_filename);
+
+    // Create file
+	std::ofstream csv_file;
+	csv_file.open(filename);
+
+    // Column Names
+    std::vector<std::string> column_names = {"Element", "DOF #", 
+                                            "x", "y", "z", "id",
+                                            "Variable Name", "Value"};
+    for (auto col : column_names) {
+        csv_file << col;
+		if (col != column_names.back()){
+			csv_file << ",";
+		}
+    } csv_file << " \n";
+
+    // Extract DOF data
+    for (auto it=vector_map.begin(); it!=vector_map.end(); it++){
+        // Extract map data
+        int dof_i     = it->first;
+        auto dof_data = it->second;
+
+        // Get DOF data
+        int elem_idx         = std::get<0>(dof_data);
+        std::string vec_comp = std::get<1>(dof_data);
+        Real vector_value    = std::get<2>(dof_data);
+
+        // Get {x, y, z, id} coordinates
+        std::vector<Real> coords = getElementCoordinates(*_mesh.elemPtr(elem_idx), elem_idx);
+
+        // Save data to CSV
+        csv_file << elem_idx     << ",";  // Elem
+        csv_file << dof_i        << ",";  // DOF #
+        csv_file << coords[0]    << ",";  // x
+        csv_file << coords[1]    << ",";  // y
+        csv_file << coords[2]    << ",";  // z
+        csv_file << coords[3]    << ",";  // id
+        csv_file << vec_comp     << ",";  // variable name
+        csv_file << vector_value;  // value
+        csv_file << " \n";
+    }
+
+    // Close file
+	csv_file.close();	
+}
+
 std::vector<Real>
-LinearSystemBaseOutput::getNodeCoordinates(const Point & p, const Real & id)
+FVOutputBase::getNodeCoordinates(const Point & p, const Real & id)
 {
 	std::vector<Real> coords;
 	coords.push_back(p(0));  // x
@@ -157,23 +171,21 @@ LinearSystemBaseOutput::getNodeCoordinates(const Point & p, const Real & id)
 	return coords;
 }
 
-dof_id_type**
-LinearSystemBaseOutput::getDOFIndices_SingleVariable(std::vector<dof_id_type> & di, const unsigned int sys_number,
-                                           			 const unsigned int var_number, unsigned int number_componets)
+std::vector<Real>
+FVOutputBase::getElementCoordinates(const Elem & elem, const Real & id)
 {
-	// Declare return array
-	dof_id_type** component_array = new dof_id_type*[number_componets];
-	// Get dof indices
-	for (auto comp_number : make_range(number_componets))
-	{
-		component_array[comp_number] = new dof_id_type[_num_nodes];
-		for (auto node_idx : make_range(_num_nodes))
-		{
-			const Node * node_i = _mesh.nodePtr(node_idx);
-			dof_id_type dof_i = node_i->dof_number(sys_number, var_number, comp_number);
-			di.push_back(dof_i);
-			component_array[comp_number][node_idx] = dof_i;		
-		}
-	}
-	return component_array;
+    Point p = elem.true_centroid();
+
+	std::vector<Real> coords;
+	coords.push_back(p(0));  // x
+	coords.push_back(p(1));  // y
+	coords.push_back(p(2));  // z
+	coords.push_back(id);    // id
+	return coords;
+}
+
+bool
+FVOutputBase::isInVector(std::vector<std::string> vec, std::string target)
+{
+    return (find(vec.begin(), vec.end(), target) != vec.end());
 }

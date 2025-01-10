@@ -8,24 +8,29 @@
 #include <chrono>
 #include <ctime>
 
-class LinearSystemBaseOutput : public FileOutput
+class FVOutputBase : public FileOutput
 {
 public:
     static InputParameters validParams();
-    LinearSystemBaseOutput(const InputParameters & parameters);
+    FVOutputBase(const InputParameters & parameters);
 
     // Main Output
     void output();
 
 protected:
-    // Setup functions
-    void setupTimeVariables();
+    // -------- Class Functions -------- //
+    // Output functions
     std::string getFilename(std::string BASE);
     void outputToCSV(Real** arr_2d, std::vector<std::string> column_names, int num_rows, int num_cols, std::string base_name);
-    std::vector<Real> getNodeCoordinates(const Point & p, const Real & id);
-    dof_id_type** getDOFIndices_SingleVariable(std::vector<dof_id_type> & di, const unsigned int sys_number,
-                                               const unsigned int var_number, unsigned int number_componets);
+    void vectorMapToCSV(FVVectorTupleMap vector_map, std::string base_filename);
 
+    // Spatial functions
+    std::vector<Real> getNodeCoordinates(const Point & p, const Real & id);
+    std::vector<Real> getElementCoordinates(const Elem & elem, const Real & id);
+
+    // Boolean functions
+    bool isInVector(std::vector<std::string> vec, std::string target);
+    
     // -------- Class Variables -------- //
     /// Class Initilization
     // Nonlinear system variables
@@ -45,17 +50,6 @@ protected:
     // Meshing
     MooseMesh & _mesh;
 	dof_id_type _num_nodes;
+    dof_id_type _num_elems;
     
-    // Timing Inputs
-    std::string _which_time;
-	std::string _time_units;
-
-    /// Latter Initilizations
-    // setupTimeVariables
-    bool _show_converged_time;
-	bool _show_nl_time;
-	bool _show_l_time;
-
-    // START-TIME
-    int START_TIME_ms = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 };
