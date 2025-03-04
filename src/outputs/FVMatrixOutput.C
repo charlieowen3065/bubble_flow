@@ -23,6 +23,10 @@ FVMatrixOutput::FVMatrixOutput(const InputParameters & parameters)
 void
 FVMatrixOutput::output()
 {
+    // Check if current timestep is in list
+    if (!doOutput())
+        return;
+
     // Setup
     setupMatrix();
 

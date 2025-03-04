@@ -16,6 +16,7 @@ protected:
     void setupTimeVariables();
     void setVariablesList();
     void setDofMaps();
+    bool doOutput();
 
     // Extraction functions
     FVDofTupleMap extractDofTuples(std::string variable_name, std::string component_name);
@@ -27,6 +28,7 @@ protected:
     // Timing Inputs
     std::string _which_time;
 	std::string _time_units;
+    std::vector<int> _timesteps_to_display;
 
     /// Latter Initilizations
     // setupTimeVariables

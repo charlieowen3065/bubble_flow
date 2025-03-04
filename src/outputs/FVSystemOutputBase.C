@@ -9,6 +9,7 @@ FVSystemOutputBase::validParams()
 
     params.addParam<std::string>("which_time", "none", "Which times to display {none, all, converged, nonlinear, linear}");
 	params.addParam<std::string>("time_units", "s", "Display-time units {s, ms, seconds, milliseconds}");
+    params.addParam<std::vector<int>>("timesteps_to_display", std::vector<int>(), "Timesteps to save matrix/vector");
 
     return params;
 }
@@ -18,7 +19,8 @@ FVSystemOutputBase::FVSystemOutputBase(const InputParameters & parameters)
     dof_object(parameters),
     // Timing Inputs
     _which_time(getParam<std::string>("which_time")),
-	_time_units(getParam<std::string>("time_units"))
+	_time_units(getParam<std::string>("time_units")),
+    _timesteps_to_display(getParam<std::vector<int>>("timesteps_to_display"))
 {
     // Setup
     setupTimeVariables();
@@ -28,6 +30,16 @@ FVSystemOutputBase::FVSystemOutputBase(const InputParameters & parameters)
 void
 FVSystemOutputBase::output()
 {}
+
+bool
+FVSystemOutputBase::doOutput()
+{
+    if (_timesteps_to_display.empty())
+        return true;
+    if (std::find(_timesteps_to_display.begin(), _timesteps_to_display.end(), _t_step) != _timesteps_to_display.end())
+        return true;
+    return false;
+}
 
 void
 FVSystemOutputBase::setupTimeVariables()
@@ -52,7 +64,7 @@ FVSystemOutputBase::setupTimeVariables()
 		_show_converged_time = true;
 		_show_nl_time = true;
 		_show_l_time = true;
-	} 
+	}
 }
 
 void
@@ -83,7 +95,7 @@ FVSystemOutputBase::extractDofTuples(std::string variable_name, std::string comp
     std::vector<std::string> column_names = dof_column_names[variable_name];
 
     // Get the possible DOF components {x, y, z} or {NONE (scalar)}
-    std::pair<std::vector<std::string>, std::vector<std::string>> dof_var_comps = 
+    std::pair<std::vector<std::string>, std::vector<std::string>> dof_var_comps =
                                 extractPossibleVectorComponents(column_names, variable_name);
     std::vector<std::string> dof_comps_full = dof_var_comps.first;
     std::vector<std::string> variable_comps_full = dof_var_comps.second;
@@ -97,7 +109,7 @@ FVSystemOutputBase::extractDofTuples(std::string variable_name, std::string comp
     }
     else {
         if (isInVector(dof_comps_full, "dof_" + component_name)) {
-            dof_comps = {"dof_" + component_name}; 
+            dof_comps = {"dof_" + component_name};
             var_comps = {variable_name + "_" + component_name};
         }
         else {
@@ -127,12 +139,12 @@ FVSystemOutputBase::extractPossibleVectorComponents(std::vector<std::string> col
     // Get the possible DOF components {x, y, z} or {NONE (scalar)}
     int number_of_geometric_columns = 4;
     std::vector<std::string> vec_comps = {"x", "y", "z"};
-    
+
     int Ncomps = column_names.size() - number_of_geometric_columns;
-    
+
     std::vector<std::string> variable_comps;
     std::vector<std::string> dof_comps;
-    
+
     if (Ncomps == 1) {
         variable_comps.push_back(variable_name);
         dof_comps.push_back("dof");

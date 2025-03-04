@@ -21,6 +21,10 @@ FVVectorOutput::FVVectorOutput(const InputParameters & parameters)
 void
 FVVectorOutput::output()
 {
+    // Check if current timestep is in list
+    if (!doOutput())
+        return;
+
     // Setup
     setDofMaps();
 
@@ -40,7 +44,7 @@ FVVectorOutput::output()
     std::vector<VariableName> variable_names;
     if ((_output_variable_name != "all") && (_output_variable_name != "none"))
         variable_names.push_back(_output_variable_name);
-    else if (_output_variable_name == "all") 
+    else if (_output_variable_name == "all")
         for (auto v : _nl.getVariableNames())
             variable_names.push_back(v);
 

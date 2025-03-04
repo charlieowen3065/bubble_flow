@@ -39,7 +39,7 @@ FVOutputBase::FVOutputBase(const InputParameters & parameters)
 }
 
 void
-FVOutputBase::output() 
+FVOutputBase::output()
 {}
 
 std::string
